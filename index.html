@@ -1,0 +1,129 @@
+<html>
+  <head>
+    <title>Code Demo</title>
+    <style>
+        body{
+            background: #f9f9f9;
+        }
+
+        #container{
+            width:700px;
+            margin:0 auto;
+        }
+        #chatwindow{
+            height:300px;
+        }
+        #mainwrapper{
+            display:none;
+        }
+        #chatwrapper{
+            float:left;
+            border:1px #ccc solid;
+            border-radius:10px;
+            background:#f4f4f4;
+            padding:10px;
+        }
+        #userwrapper{
+            float:left;
+            border:1px #ccc solid;
+            border-radius:10px;
+            background:#f4f4f4;
+            padding:10px;
+            margin-left:20px;
+            width:150px;
+            max-height:200px;
+        }
+
+        #nameswrapper{
+            float:left;
+            border:1px #ccc solid;
+            border-radius:10px;
+            background:#f4f4f4;
+            padding:10px;
+            margin-left:20px;
+        }
+
+        input{
+            height:30px;
+            border:solid 1px #ccc;
+        }
+    </style>
+  </head>
+  <body>
+    <div id="container">
+        <div id="namewrapper">
+            <h2>Chat</h2>
+            <p>Create UserName :</p>
+            <div id="error"></div>
+            <form id="usernameForm">
+              <input type="text" size="35" id="username">
+              <input type="submit" value="Submit">
+            </form>
+        </div>
+
+        <div id="mainwrapper">
+             <h2>Chat</h2>
+             <div id="chatwrapper">
+                 <div id="chatwindow"></div>
+                 <form id="messageForm">
+                   <input type="text" size="35" id="message" placeholder="Say something ....">
+                   <input type="submit" value="Submit">
+                 </form>
+             </div>
+
+        <div id="userwrapper">
+            <div id="users"></div>
+        </div>
+        </div>
+    </div>
+    <script src="http://code.jquery.com/jquery-latest.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+
+    <script>
+      $(function(){
+          var socket = io.connect();
+          var $messageForm = $('#messageForm');
+          var $message = $('#message');
+          var $chat = $('#chatwindow');
+          var $userNameForm = $('#usernameForm');
+          var $user = $("#users");
+          var $username = $('#username');
+          var $error = $('#error');
+
+          $userNameForm.submit(function(e){
+              e.preventDefault();
+              console.log("preventing submission .....");
+              socket.emit('new user', $username.val(), function(data){
+                  if(data){
+                      $('#namewrapper').hide();
+                      $('#mainwrapper').show();
+                  }else{
+                      $error.html('username is taken');
+                  }
+              });
+              $message.val('');
+          });
+
+          socket.on('usernames', function(data){
+              var html = '';
+              for(i = 0 ;i<data.length;i++){
+                  html +=data[i]+'<br/>';
+              }
+              $user.html(html);
+          })
+
+           $messageForm.submit(function(e){
+              e.preventDefault();
+              console.log("preventing submission .....");
+              socket.emit('send message', $message.val());
+              $message.val('');
+          });
+
+          socket.on('new message',function(data){
+              $chat.append('<Strong>'+data.user+'</Strong>'+' : '+data.msg+'<br/>')
+          })
+      });
+
+    </script>
+  </body>
+</html>
